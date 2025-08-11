@@ -10,29 +10,27 @@ The project is divided into three main components:
 
 2.  **`rest-api-go`**: This directory contains a REST API built with Go and the Gin framework. The API acts as a bridge between the front-end and the blockchain network, allowing you to interact with the smart contract through standard HTTP requests.
 
-3.  **`frontend-react`**: This directory contains a single-page application (SPA) built with React and Tailwind CSS. The front-end provides a user-friendly interface for managing the financial assets, interacting with the REST API to perform operations on the blockchain.
+3.  **`frontend-react`**: This directory contains a single-page application (SPA) built with React and Vite. The front-end provides a user-friendly interface for managing the financial assets, interacting with the REST API to perform operations on the blockchain.
+
+4.  **`scripts`**: This directory contains helper scripts to automate the setup and deployment of the project.
 
 ## Getting Started
 
-To get started with this project, you will need to set up the Hyperledger Fabric network, deploy the smart contract, run the REST API, and run the front-end application.
+To get started with this project, you can use the automated setup script for the backend, and then run the front-end application.
 
-### 1. Set up the Hyperledger Fabric Network
+### 1. Set up the Backend (Fabric Network and REST API)
 
-Follow the instructions in the `rest-api-go/README.md` file to set up a local Hyperledger Fabric network using the `fabric-samples`.
+The `setup-backend.sh` script automates the process of setting up the Hyperledger Fabric network, deploying the smart contract, and provides instructions for running the REST API.
 
-### 2. Deploy the Smart Contract
-
-Once you have the Fabric network running, deploy the smart contract using the following command from the `fabric-samples/test-network` directory:
+To run the script, navigate to the `scripts` directory and execute the following command:
 
 ```bash
-./network.sh deployCC -ccn asset-tracker -ccp ../../chaincode-go -ccl go
+./setup-backend.sh
 ```
 
-### 3. Run the REST API
+The script will guide you through the process.
 
-Follow the instructions in the `rest-api-go/README.md` file to build and run the REST API in a Docker container.
-
-### 4. Run the Front-End Application
+### 2. Run the Front-End Application
 
 Follow the instructions in the `frontend-react/README.md` file to set up and run the React front-end application.
 
