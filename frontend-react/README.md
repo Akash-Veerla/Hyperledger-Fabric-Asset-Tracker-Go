@@ -1,26 +1,32 @@
 # Asset Tracker Front-End
 
-This is a single-page application (SPA) built with React and Vite, providing a user interface for the Asset Tracker project.
+## Overview
 
-## Prerequisites
+This is a single-page application (SPA) built with React and Vite, providing a user interface for the Asset Tracker project. It is intended to be run as part of the `docker-compose` setup in the root of the project.
 
-- Node.js and npm
-- A running instance of the `rest-api-go` service.
+## Running the Front-End
 
-## Getting Started
+The recommended way to run this application is through the main `docker-compose.yaml` file in the root of the project.
 
-1. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+```bash
+# From the project root
+docker-compose up --build frontend
+```
 
-2. **Run the development server:**
-   ```bash
-   npm run dev
-   ```
+This will build the Docker image and start the container, serving the application on port 3000. The service is also started as part of the full stack `docker-compose up` command.
 
-This will start the Vite development server, and you can view the application in your browser at `http://localhost:5173` (or the address shown in your terminal).
+### Development
 
-## Connecting to the REST API
+For local development, you can run the Vite dev server:
 
-The front-end is configured to connect to the REST API at `http://localhost:8080`. If your API is running on a different address, you will need to update the `API_URL` constant in the `src/App.jsx` file.
+1.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+
+2.  **Run the development server:**
+    ```bash
+    npm run dev
+    ```
+
+The application will be available at `http://localhost:5173`.

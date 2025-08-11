@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useAssets } from './context/AssetContext';
 
 function App() {
-  const [assets, setAssets] = useState([]);
+  const { assets, loading, error, createAsset, updateAsset, deleteAsset } = useAssets();
   const [newAsset, setNewAsset] = useState({
     DEALERID: '',
     MSISDN: '',
@@ -14,22 +15,6 @@ function App() {
   });
   const [editingAsset, setEditingAsset] = useState(null);
 
-  const API_URL = 'http://localhost:8080';
-
-  useEffect(() => {
-    fetchAssets();
-  }, []);
-
-  const fetchAssets = async () => {
-    try {
-      const response = await fetch(`${API_URL}/assets`);
-      const data = await response.json();
-      setAssets(data || []);
-    } catch (error) {
-      console.error('Error fetching assets:', error);
-    }
-  };
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewAsset({ ...newAsset, [name]: value });
@@ -40,157 +25,144 @@ function App() {
     setEditingAsset({ ...editingAsset, [name]: value });
   };
 
-  const createAsset = async (e) => {
+  const handleCreateSubmit = (e) => {
     e.preventDefault();
-    try {
-      await fetch(`${API_URL}/assets`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newAsset),
-      });
-      fetchAssets();
-      setNewAsset({
-        DEALERID: '',
-        MSISDN: '',
-        MPIN: '',
-        BALANCE: '',
-        STATUS: 'active',
-        TRANSAMOUNT: '0',
-        TRANSTYPE: 'init',
-        REMARKS: '',
-      });
-    } catch (error) {
-      console.error('Error creating asset:', error);
-    }
+    createAsset(newAsset);
+    setNewAsset({
+      DEALERID: '', MSISDN: '', MPIN: '', BALANCE: '', STATUS: 'active',
+      TRANSAMOUNT: '0', TRANSTYPE: 'init', REMARKS: '',
+    });
   };
 
-  const updateAsset = async (e) => {
+  const handleUpdateSubmit = (e) => {
     e.preventDefault();
-    try {
-      await fetch(`${API_URL}/assets/${editingAsset.DEALERID}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editingAsset),
-      });
-      fetchAssets();
-      setEditingAsset(null);
-    } catch (error) {
-      console.error('Error updating asset:', error);
-    }
+    updateAsset(editingAsset);
+    setEditingAsset(null);
   };
 
-  const deleteAsset = async (id) => {
-    try {
-      await fetch(`${API_URL}/assets/${id}`, { method: 'DELETE' });
-      fetchAssets();
-    } catch (error) {
-      console.error('Error deleting asset:', error);
-    }
+  const startEdit = (asset) => {
+    setEditingAsset({ ...asset });
   };
-
 
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Asset Tracker</h1>
 
-      <div className="mb-8">
+      {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">{error}</div>}
+
+      <div className="mb-8 p-4 border rounded-lg">
         <h2 className="text-xl font-semibold mb-2">{editingAsset ? 'Edit Asset' : 'Create New Asset'}</h2>
-        <form onSubmit={editingAsset ? updateAsset : createAsset} className="grid grid-cols-2 gap-4">
+        <form onSubmit={editingAsset ? handleUpdateSubmit : handleCreateSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input
             type="text"
             name="DEALERID"
             placeholder="Dealer ID"
             value={editingAsset ? editingAsset.DEALERID : newAsset.DEALERID}
-            onChange={editingAsset ? handleEditingInputChange: handleInputChange}
-            className="border p-2"
-            disabled={editingAsset}
+            onChange={editingAsset ? handleEditingInputChange : handleInputChange}
+            className="border p-2 rounded"
+            disabled={!!editingAsset}
+            required
           />
           <input
             type="text"
             name="MSISDN"
             placeholder="MSISDN"
             value={editingAsset ? editingAsset.MSISDN : newAsset.MSISDN}
-            onChange={editingAsset ? handleEditingInputChange: handleInputChange}
-            className="border p-2"
+            onChange={editingAsset ? handleEditingInputChange : handleInputChange}
+            className="border p-2 rounded"
+            required
           />
           <input
             type="text"
             name="MPIN"
             placeholder="MPIN"
             value={editingAsset ? editingAsset.MPIN : newAsset.MPIN}
-            onChange={editingAsset ? handleEditingInputChange: handleInputChange}
-            className="border p-2"
+            onChange={editingAsset ? handleEditingInputChange : handleInputChange}
+            className="border p-2 rounded"
+            required
           />
           <input
             type="text"
             name="BALANCE"
             placeholder="Balance"
             value={editingAsset ? editingAsset.BALANCE : newAsset.BALANCE}
-            onChange={editingAsset ? handleEditingInputChange: handleInputChange}
-            className="border p-2"
+            onChange={editingAsset ? handleEditingInputChange : handleInputChange}
+            className="border p-2 rounded"
+            required
           />
           <input
             type="text"
             name="REMARKS"
             placeholder="Remarks"
             value={editingAsset ? editingAsset.REMARKS : newAsset.REMARKS}
-            onChange={editingAsset ? handleEditingInputChange: handleInputChange}
-            className="border p-2 col-span-2"
+            onChange={editingAsset ? handleEditingInputChange : handleInputChange}
+            className="border p-2 rounded md:col-span-2"
           />
-          <button type="submit" className="bg-blue-500 text-white p-2 rounded col-span-2">
-            {editingAsset ? 'Update Asset' : 'Create Asset'}
-          </button>
-          {editingAsset && (
+          <div className="md:col-span-2 flex justify-end gap-2">
+            {editingAsset && (
+              <button
+                type="button"
+                onClick={() => setEditingAsset(null)}
+                className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded"
+              >
+                Cancel Edit
+              </button>
+            )}
             <button
-              type="button"
-              onClick={() => setEditingAsset(null)}
-              className="bg-gray-500 text-white p-2 rounded col-span-2"
+              type="submit"
+              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
             >
-              Cancel Edit
+              {editingAsset ? 'Update Asset' : 'Create Asset'}
             </button>
-          )}
+          </div>
         </form>
       </div>
 
       <div>
-        <h2 className="text-xl font-semibold mb-2">Assets</h2>
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-200">
-              <th className="border p-2">Dealer ID</th>
-              <th className="border p-2">MSISDN</th>
-              <th className="border p-2">Balance</th>
-              <th className="border p-2">Status</th>
-              <th className="border p-2">Remarks</th>
-              <th className="border p-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {assets.map((asset) => (
-              <tr key={asset.DEALERID}>
-                <td className="border p-2">{asset.DEALERID}</td>
-                <td className="border p-2">{asset.MSISDN}</td>
-                <td className="border p-2">{asset.BALANCE}</td>
-                <td className="border p-2">{asset.STATUS}</td>
-                <td className="border p-2">{asset.REMARKS}</td>
-                <td className="border p-2">
-                  <button
-                    onClick={() => setEditingAsset(asset)}
-                    className="bg-yellow-500 text-white p-1 rounded mr-2"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => deleteAsset(asset.DEALERID)}
-                    className="bg-red-500 text-white p-1 rounded"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <h2 className="text-xl font-semibold mb-2">Assets on Ledger</h2>
+        {loading ? (
+          <p>Loading assets...</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead className="bg-gray-200">
+                <tr>
+                  <th className="p-2 border">Dealer ID</th>
+                  <th className="p-2 border">MSISDN</th>
+                  <th className="p-2 border">Balance</th>
+                  <th className="p-2 border">Status</th>
+                  <th className="p-2 border">Remarks</th>
+                  <th className="p-2 border">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {assets.map((asset) => (
+                  <tr key={asset.DEALERID} className="hover:bg-gray-100">
+                    <td className="p-2 border">{asset.DEALERID}</td>
+                    <td className="p-2 border">{asset.MSISDN}</td>
+                    <td className="p-2 border">{asset.BALANCE}</td>
+                    <td className="p-2 border">{asset.STATUS}</td>
+                    <td className="p-2 border">{asset.REMARKS}</td>
+                    <td className="p-2 border text-center">
+                      <button
+                        onClick={() => startEdit(asset)}
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1 px-2 rounded mr-2"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => deleteAsset(asset.DEALERID)}
+                        className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

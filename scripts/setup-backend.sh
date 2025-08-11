@@ -3,10 +3,17 @@
 # This script automates the setup of the Hyperledger Fabric backend.
 # It should be run from the root of the project directory.
 
-# --- 1. Check for fabric-samples repository ---
+# --- 1. Check for required tools ---
+echo "--- Checking for required tools (Docker, Go) ---"
+command -v docker >/dev/null 2>&1 || { echo >&2 "Docker is not installed. Aborting."; exit 1; }
+command -v go >/dev/null 2>&1 || { echo >&2 "Go is not installed. Aborting."; exit 1; }
+echo "All required tools are installed."
+
+# --- 2. Check for fabric-samples repository ---
 echo "--- Checking for fabric-samples repository ---"
-if [ -d "../fabric-samples" ]; then
-    echo "fabric-samples repository found."
+FABRIC_SAMPLES_PATH="../fabric-samples"
+if [ -d "$FABRIC_SAMPLES_PATH" ]; then
+    echo "fabric-samples repository found at $FABRIC_SAMPLES_PATH"
 else
     echo "fabric-samples repository not found."
     echo "Please clone it by running the following command in the parent directory of this project:"
@@ -14,43 +21,50 @@ else
     exit 1
 fi
 
-# --- 2. Bring up the Hyperledger Fabric test network ---
+# --- 3. Bring up the Hyperledger Fabric test network ---
 echo "--- Bringing up the Hyperledger Fabric test network ---"
-cd ../fabric-samples/test-network
+cd "$FABRIC_SAMPLES_PATH/test-network"
 ./network.sh down
 ./network.sh up createChannel -ca -s couchdb
 
-# --- 3. Deploy the smart contract ---
+# --- 4. Deploy the smart contract ---
 echo "--- Deploying the smart contract ---"
+# Note: The path to the chaincode is relative to the test-network directory
 ./network.sh deployCC -ccn asset-tracker -ccp ../../Hyperledger-Fabric-Asset-Tracker-Go/chaincode-go -ccl go
 
-# --- 4. Instructions for rest-api-go configuration ---
+# --- 5. Generate config.json for the REST API ---
+echo "--- Generating config.json for the REST API ---"
+# This path will be the one used inside the rest-api container
+CRYPTO_PATH_IN_CONTAINER="/crypto/organizations"
+API_CONFIG_PATH="../../Hyperledger-Fabric-Asset-Tracker-Go/rest-api-go/config.json"
+
+# Create the config.json file
+cat > "$API_CONFIG_PATH" <<EOL
+{
+  "mspID": "Org1MSP",
+  "cryptoPath": "${CRYPTO_PATH_IN_CONTAINER}",
+  "certPath": "peerOrganizations/org1.example.com/users/User1@org1.example.com/msp/signcerts/cert.pem",
+  "keyPath": "peerOrganizations/org1.example.com/users/User1@org1.example.com/msp/keystore/",
+  "tlsCertPath": "peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt",
+  "peerEndpoint": "172.17.0.1:7051",
+  "gatewayPeer": "peer0.org1.example.com",
+  "channelName": "mychannel",
+  "chaincodeName": "asset-tracker",
+  "port": "8080"
+}
+EOL
+echo "config.json created at $API_CONFIG_PATH"
+# Note: The peerEndpoint is set to the default Docker bridge IP. This might need to be adjusted depending on the user's Docker network setup.
+
+# --- 6. Final Instructions ---
+echo ""
 echo "--- Backend setup complete! ---"
 echo ""
-echo "--- Instructions for rest-api-go ---"
-echo "The REST API needs environment variables to connect to the Fabric network."
-echo "The API is currently hardcoded to use the User1@org1.example.com identity."
-echo "For a production setup, you should externalize these configurations."
+echo "The Hyperledger Fabric network is running, and the smart contract is deployed."
+echo "The REST API configuration has been generated."
 echo ""
-echo "The API reads crypto material from a path that should be mounted into its container."
-echo "The required crypto material is located in your 'fabric-samples/test-network/organizations' directory."
+echo "You can now run the entire application stack using Docker Compose."
+echo "Navigate to the root of the project directory and run:"
 echo ""
-
-# --- 5. Instructions to run the REST API ---
-echo "--- Running the rest-api-go application ---"
-echo "To build and run the REST API, navigate to the 'rest-api-go' directory"
-echo "in a new terminal and execute the following commands:"
+echo "docker-compose up --build"
 echo ""
-echo "1. Build the Docker image:"
-echo "   cd ../../Hyperledger-Fabric-Asset-Tracker-Go/rest-api-go"
-echo "   docker build -t asset-tracker-api ."
-echo ""
-echo "2. Run the Docker container, mounting the crypto material:"
-echo "   docker run -p 8080:8080 \\"
-echo "     -v \`pwd\`/../../fabric-samples/test-network/organizations:/path/to/crypto/material \\"
-echo "     asset-tracker-api"
-echo ""
-echo "Note: Make sure you are in the 'rest-api-go' directory when running the docker run command,"
-echo "or adjust the volume path accordingly."
-echo ""
-echo "Once the container is running, the API will be accessible at http://localhost:8080"

@@ -2,37 +2,52 @@
 
 This project is a blockchain-based system for managing and tracking financial assets, built on Hyperledger Fabric. It includes a Go smart contract, a REST API, and a React front-end.
 
-## Project Overview
+## Architecture
 
-The project is divided into three main components:
-
-1.  **`chaincode-go`**: This directory contains the Go smart contract (chaincode) that runs on the Hyperledger Fabric network. The chaincode is responsible for managing the assets on the blockchain, including creating, reading, updating, and deleting assets.
-
-2.  **`rest-api-go`**: This directory contains a REST API built with Go and the Gin framework. The API acts as a bridge between the front-end and the blockchain network, allowing you to interact with the smart contract through standard HTTP requests.
-
-3.  **`frontend-react`**: This directory contains a single-page application (SPA) built with React and Vite. The front-end provides a user-friendly interface for managing the financial assets, interacting with the REST API to perform operations on the blockchain.
-
-4.  **`scripts`**: This directory contains helper scripts to automate the setup and deployment of the project.
+The project consists of three main services orchestrated with Docker Compose:
+1.  **`chaincode-go`**: The Go smart contract that runs on the Hyperledger Fabric network. It defines the business logic for managing assets.
+2.  **`rest-api-go`**: A REST API built with Go that acts as a bridge to the blockchain network.
+3.  **`frontend-react`**: A single-page application built with React and Vite that provides a user interface for interacting with the system.
 
 ## Getting Started
 
-To get started with this project, you can use the automated setup script for the backend, and then run the front-end application.
+The entire application stack can be set up and run with a combination of a setup script and Docker Compose.
 
-### 1. Set up the Backend (Fabric Network and REST API)
+### Prerequisites
+- Docker and Docker Compose
+- Go
+- Node.js and npm
+- A local clone of the `fabric-samples` repository in the parent directory of this project.
 
-The `setup-backend.sh` script automates the process of setting up the Hyperledger Fabric network, deploying the smart contract, and provides instructions for running the REST API.
+### 1. Set up the Backend
 
-To run the script, navigate to the `scripts` directory and execute the following command:
+First, run the backend setup script. This script will:
+- Start the Hyperledger Fabric test network.
+- Deploy the smart contract.
+- Generate the necessary configuration for the REST API.
 
+From the root of this project, run:
 ```bash
+cd scripts
 ./setup-backend.sh
 ```
 
-The script will guide you through the process.
+### 2. Run the Application Stack
 
-### 2. Run the Front-End Application
+Once the backend setup is complete, you can start the entire application using Docker Compose.
 
-Follow the instructions in the `frontend-react/README.md` file to set up and run the React front-end application.
+From the root of this project, run:
+```bash
+docker-compose up --build
+```
+
+This will:
+- Build the Docker images for the REST API and the frontend.
+- Start the containers.
+
+You can then access:
+- The frontend application at `http://localhost:3000`
+- The REST API at `http://localhost:8080`
 
 ## Contributing
 
